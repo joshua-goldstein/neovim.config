@@ -1,0 +1,6 @@
+require('joshua.remap')
+require('joshua.plugin')
+require('joshua.set')
+require('joshua.theme')
+require('joshua.lsp')
+require('joshua.treesitter')
