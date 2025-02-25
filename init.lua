@@ -6,31 +6,26 @@
 -- must happen before plugins are loaded (or wrong leader will be used)
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
-
 -- file explorer
 vim.keymap.set('n', '<leader>pv', vim.cmd.Ex)
-
 -- move around buffers
 vim.keymap.set('n', '<S-l>', ':bnext<CR>')
 vim.keymap.set('n', '<S-h>', ':bprevious<CR>')
-
 -- resize with arrows
 vim.keymap.set('n', '<C-Up>', ':resize +2<CR>')
 vim.keymap.set('n', '<C-Down>', ':resize -2<CR>')
 vim.keymap.set('n', '<C-Left>', ':vertical resize -2<CR>')
 vim.keymap.set('n', '<C-Right>', ':vertical resize +2<CR>')
-
 -- use esc to exit terminal mode
 -- see :help terminal-emulator
 vim.keymap.set('t', '<Esc>', '<C-\\><C-n>')
-
 -- center screen after jumping up / down
 vim.keymap.set('n', '<C-d>', '<C-d>zz')
 vim.keymap.set('n', '<C-u>', '<C-u>zz')
 vim.keymap.set('n', 'n', 'nzzzv')
 vim.keymap.set('n', 'N', 'Nzzzv')
 
--- note: diagnostics are not exclusive to lsp servers
+-- diagnostics are not exclusive to lsp servers
 -- so these can be global keybindings
 vim.keymap.set('n', 'gl', '<cmd>lua vim.diagnostic.open_float()<cr>')
 vim.keymap.set('n', '[d', '<cmd>lua vim.diagnostic.goto_prev()<cr>')
@@ -51,7 +46,6 @@ vim.diagnostic.config {
 }
 
 -- [[editor options]]
-
 -- equivalent to :set number
 vim.opt.number = true
 vim.opt.mouse = 'a'
@@ -61,20 +55,16 @@ vim.opt.wrap = false
 vim.opt.ignorecase = true
 vim.opt.smartcase = true
 vim.opt.list = true
-
 -- tab options
 vim.opt.tabstop = 2
 vim.opt.softtabstop = 2
 vim.opt.shiftwidth = 2
 vim.opt.expandtab = true
-
 -- only show status bar if two windows are open
 vim.opt.laststatus = 1
-
 -- split options
 vim.opt.splitright = true
 vim.opt.splitbelow = true
-
 -- highlight yanked text
 vim.api.nvim_create_autocmd('TextYankPost', {
   desc = 'Highlight when yanking text',
@@ -94,6 +84,7 @@ local clone_paq = function()
     return true
   end
 end
+
 local bootstrap_paq = function(packages)
   vim.cmd.packadd 'paq-nvim'
   local paq = require 'paq'
@@ -125,7 +116,7 @@ setup_paq {
   { 'tpope/vim-fugitive' },
 }
 
--- [[ color theme ]]
+-- [[ colorscheme ]]
 function ColorMyPencils(color)
   color = color or 'rose-pine'
   -- or vim.cmd("colorscheme rose-pine")
@@ -133,15 +124,14 @@ function ColorMyPencils(color)
   vim.api.nvim_set_hl(0, 'Normal', { bg = 'none' })
   vim.api.nvim_set_hl(0, 'NormalFloat', { bg = 'none' })
 end
-
 ColorMyPencils()
 
---  [[ treesitter config ]]
+--  [[ treesitter ]]
 require('nvim-treesitter.configs').setup {
   ensure_installed = { 'c', 'lua', 'vim', 'vimdoc', 'query', 'markdown', 'markdown_inline' },
 }
 
--- [[ telescope config ]]
+-- [[ telescope ]]
 local builtin = require 'telescope.builtin'
 vim.keymap.set('n', '<leader>pf', builtin.find_files, {})
 vim.keymap.set('n', '<leader>pg', builtin.live_grep, {})
@@ -151,8 +141,8 @@ vim.keymap.set('n', '<leader>ps', function()
   builtin.grep_string { search = vim.fn.input 'Grep > ' }
 end)
 
+-- [[ lsp ]]
 -- see :h lsp
--- [[ lsp config ]]
 require('mason').setup()
 require('mason-lspconfig').setup()
 require('lspconfig')['hls'].setup {
@@ -166,7 +156,7 @@ require('lspconfig')['gopls'].setup {}
 -- vim.keymap.set("n", "<leader>gs", vim.cmd("Git status"))
 require('lspconfig').lua_ls.setup {}
 
--- [[ formatter config ]]
+-- [[ formatter ]]
 -- configure Format, FormatWrite, FormatLock, and FormatWriteLock commands
 require('formatter').setup {
   logging = true,
@@ -192,11 +182,10 @@ require('formatter').setup {
   },
 }
 
--- [[ linter config ]]
+-- [[ linter ]]
 require('lint').linters_by_ft = {
   lua = { 'luacheck' },
 }
-
 vim.api.nvim_create_autocmd({ 'BufWritePost' }, {
   callback = function()
     require('lint').try_lint()
