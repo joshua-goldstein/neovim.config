@@ -24,6 +24,9 @@ vim.keymap.set('n', '<C-d>', '<C-d>zz')
 vim.keymap.set('n', '<C-u>', '<C-u>zz')
 vim.keymap.set('n', 'n', 'nzzzv')
 vim.keymap.set('n', 'N', 'Nzzzv')
+-- shortcut to search open files
+vim.keymap.set('', '<Space>', '<Nop>')
+vim.keymap.set('n', '<leader><space>', '<cmd>buffers<cr>:buffer ', { desc = 'Search open files' })
 
 -- diagnostics are not exclusive to lsp servers
 -- so these can be global keybindings
