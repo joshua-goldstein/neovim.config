@@ -7,7 +7,7 @@
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 -- file explorer
-vim.keymap.set('n', '<leader>pv', vim.cmd.Ex)
+vim.keymap.set('n', '<leader>pp', vim.cmd.Ex)
 -- move around buffers
 vim.keymap.set('n', '<S-l>', ':bnext<CR>')
 vim.keymap.set('n', '<S-h>', ':bprevious<CR>')
@@ -40,9 +40,9 @@ function ToggleDiagnostics()
   end
 end
 
--- instead use <C-w>d to view diagnostic message under cursor
 vim.diagnostic.config {
-  virtual_text = false,
+  virtual_text = false, -- instead use <C-w>d to view diagnostic message under cursor
+  signs = false, -- remove warning signs from sign column
 }
 
 -- [[editor options]]
@@ -105,8 +105,8 @@ end
 setup_paq {
   { 'savq/paq-nvim' },
   { 'nvim-treesitter/nvim-treesitter', build = ':TSUpdate' },
-  { 'williamboman/mason.nvim' },
-  { 'williamboman/mason-lspconfig.nvim' },
+  { 'mason-org/mason.nvim' },
+  { 'mason-org/mason-lspconfig.nvim' },
   { 'neovim/nvim-lspconfig' },
   { 'mhartington/formatter.nvim' },
   { 'mfussenegger/nvim-lint' },
@@ -142,19 +142,19 @@ vim.keymap.set('n', '<leader>ps', function()
 end)
 
 -- [[ lsp ]]
--- see :h lsp
+-- see :h lsp and :h lsp-defaults and :h lsp-config
+-- see :h lspconfig and :h lspconfig-all for info about default configurations (from nvim-lspconfig)
+-- 
 require('mason').setup()
 require('mason-lspconfig').setup()
-require('lspconfig')['hls'].setup {
+vim.lsp.config('hls', {
   filetypes = { 'haskell', 'lhaskell', 'cabal' },
-
   cmd = { 'haskell-language-server-wrapper-2.9.0.1', '--lsp' },
-}
-require('lspconfig')['gopls'].setup {}
--- git commands (requires vim-fugitive)
--- vim.keymap.set("n", "<leader>gs", vim.cmd.Git('status'))
--- vim.keymap.set("n", "<leader>gs", vim.cmd("Git status"))
-require('lspconfig').lua_ls.setup {}
+})
+vim.lsp.enable('hls')
+vim.lsp.enable('gopls')
+vim.lsp.enable('lua_ls')
+vim.lsp.enable('pylsp')
 
 -- [[ formatter ]]
 -- configure Format, FormatWrite, FormatLock, and FormatWriteLock commands
@@ -191,3 +191,8 @@ vim.api.nvim_create_autocmd({ 'BufWritePost' }, {
     require('lint').try_lint()
   end,
 })
+
+-- [[ misc ]]
+-- git commands (requires vim-fugitive)
+-- vim.keymap.set("n", "<leader>gs", vim.cmd.Git('status'))
+-- vim.keymap.set("n", "<leader>gs", vim.cmd("Git status"))
