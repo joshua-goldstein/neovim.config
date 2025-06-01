@@ -107,18 +107,17 @@ local setup_paq = function(packages)
   end
 end
 
+-- [[ package imports ]] --
 setup_paq {
   { 'savq/paq-nvim' },
   { 'nvim-treesitter/nvim-treesitter', build = ':TSUpdate' },
   { 'mason-org/mason.nvim' },
---  { 'mason-org/mason-lspconfig.nvim' },
   { 'neovim/nvim-lspconfig' },
-  { 'mhartington/formatter.nvim' },
+  { 'stevearc/conform.nvim' },
   { 'mfussenegger/nvim-lint' },
   { 'rose-pine/neovim', as = 'rose-pine' },
   { 'nvim-lua/plenary.nvim' },
   { 'nvim-telescope/telescope.nvim', branch = '0.1.x' },
-  { 'tpope/vim-fugitive' },
 }
 
 -- [[ colorscheme ]]
@@ -150,7 +149,6 @@ end)
 -- see :h lsp and :h lsp-defaults and :h lsp-config
 -- see :h lspconfig and :h lspconfig-all for info about default configurations (from nvim-lspconfig)
 require('mason').setup()
--- require('mason-lspconfig').setup()
 
 -- configs here will overwrite lspconfig defaults
 vim.lsp.config('hls', {
@@ -204,29 +202,40 @@ vim.api.nvim_create_autocmd('LspAttach', {
 
 -- [[ formatter ]]
 -- configure Format, FormatWrite, FormatLock, and FormatWriteLock commands
-require('formatter').setup {
-  logging = true,
-  log_level = vim.log.levels.WARN,
-  -- All formatter configurations are opt-in
-  filetype = {
-    -- formatters are executed in order within their own tables
-    css = {
-      require 'formatter.defaults.prettier',
-    },
-    html = {
-      require 'formatter.defaults.prettier',
-    },
-    lua = {
-      require('formatter.filetypes.lua').stylua,
-    },
-    -- any filetype
-    ['*'] = {
-      require('formatter.filetypes.any').remove_trailing_whitespace,
-      -- Remove trailing whitespace without 'sed'
-      -- require("formatter.filetypes.any").substitute_trailing_whitespace,
-    },
+-- require('formatter').setup {
+--   logging = true,
+--   log_level = vim.log.levels.WARN,
+--   -- All formatter configurations are opt-in
+--   filetype = {
+--     -- formatters are executed in order within their own tables
+--     css = {
+--       require 'formatter.defaults.prettier',
+--     },
+--     html = {
+--       require 'formatter.defaults.prettier',
+--     },
+--     lua = {
+--       require('formatter.filetypes.lua').stylua,
+--     },
+--     -- any filetype
+--     ['*'] = {
+--       require('formatter.filetypes.any').remove_trailing_whitespace,
+--       -- Remove trailing whitespace without 'sed'
+--       -- require("formatter.filetypes.any").substitute_trailing_whitespace,
+--     },
+--   },
+-- }
+require("conform").setup({
+  formatters_by_ft = {
+    lua = { "stylua" },
+    -- Conform will run multiple formatters sequentially
+    python = { "isort", "black" },
+    -- You can customize some of the format options for the filetype (:help conform.format)
+    rust = { "rustfmt", lsp_format = "fallback" },
+    -- Conform will run the first available formatter
+    javascript = { "prettierd", "prettier", stop_after_first = true },
   },
-}
+})
 
 -- [[ linter ]]
 require('lint').linters_by_ft = {
