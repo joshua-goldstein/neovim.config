@@ -31,8 +31,6 @@ vim.keymap.set('n', '<leader><space>', '<cmd>buffers<cr>:buffer ', { desc = 'Sea
 -- diagnostics are not exclusive to lsp servers
 -- so these can be global keybindings
 vim.keymap.set('n', 'gl', '<cmd>lua vim.diagnostic.open_float()<cr>')
-vim.keymap.set('n', '[d', '<cmd>lua vim.diagnostic.goto_prev()<cr>')
-vim.keymap.set('n', ']d', '<cmd>lua vim.diagnostic.goto_next()<cr>')
 vim.keymap.set('n', '<leader>d', '<cmd>lua ToggleDiagnostics()<cr>')
 
 function ToggleDiagnostics()
@@ -44,9 +42,13 @@ function ToggleDiagnostics()
 end
 
 vim.diagnostic.config {
-  virtual_text = false, -- instead use <C-w>d to view diagnostic message under cursor
+  virtual_text = false, -- instead use <C-w>d or gl to view diagnostic message under cursor
   signs = false, -- remove warning signs from sign column
+--  jump = { float = true } -- show float when jumping to diagnostics
 }
+
+-- disable diagnostics by default
+vim.diagnostic.enable(false)
 
 -- [[editor options]]
 -- equivalent to :set number
@@ -109,7 +111,7 @@ setup_paq {
   { 'savq/paq-nvim' },
   { 'nvim-treesitter/nvim-treesitter', build = ':TSUpdate' },
   { 'mason-org/mason.nvim' },
-  { 'mason-org/mason-lspconfig.nvim' },
+--  { 'mason-org/mason-lspconfig.nvim' },
   { 'neovim/nvim-lspconfig' },
   { 'mhartington/formatter.nvim' },
   { 'mfussenegger/nvim-lint' },
@@ -147,17 +149,58 @@ end)
 -- [[ lsp ]]
 -- see :h lsp and :h lsp-defaults and :h lsp-config
 -- see :h lspconfig and :h lspconfig-all for info about default configurations (from nvim-lspconfig)
--- 
 require('mason').setup()
-require('mason-lspconfig').setup()
+-- require('mason-lspconfig').setup()
+
+-- configs here will overwrite lspconfig defaults
 vim.lsp.config('hls', {
   filetypes = { 'haskell', 'lhaskell', 'cabal' },
   cmd = { 'haskell-language-server-wrapper-2.9.0.1', '--lsp' },
 })
+
+vim.lsp.config('lua_ls', {
+  settings = {
+    Lua = {
+      diagnostics = {
+        globals = { 'vim' }
+      }
+    }
+  }
+})
+
 vim.lsp.enable('hls')
 vim.lsp.enable('gopls')
 vim.lsp.enable('lua_ls')
 vim.lsp.enable('pylsp')
+
+-- ref: https://vonheikemen.github.io/devlog/tools/neovim-lsp-client-guide/
+vim.api.nvim_create_autocmd('LspAttach', {
+  callback = function(event)
+    local bufmap = function(mode, rhs, lhs)
+      vim.keymap.set(mode, rhs, lhs, {buffer = event.buf})
+    end
+
+    -- These keymaps are the defaults in Neovim v0.11
+    -- see :h lsp-default
+    -- bufmap('n', 'K', '<cmd>lua vim.lsp.buf.hover()<cr>')
+    -- bufmap('n', 'grr', '<cmd>lua vim.lsp.buf.references()<cr>')
+    -- bufmap('n', 'gri', '<cmd>lua vim.lsp.buf.implementation()<cr>')
+    -- bufmap('n', 'grn', '<cmd>lua vim.lsp.buf.rename()<cr>')
+    -- bufmap('n', 'gra', '<cmd>lua vim.lsp.buf.code_action()<cr>')
+    -- bufmap('n', 'gO', '<cmd>lua vim.lsp.buf.document_symbol()<cr>')
+    -- bufmap({'i', 's'}, '<C-s>', '<cmd>lua vim.lsp.buf.signature_help()<cr>')
+    -- see also: ctrl-] (jump to definition, ctrl-t or ctrl-o to go back)
+    -- see also: ctrl-x ctrl-o in insert mode to trigger code completions
+    -- see also: ctrl-w + d for floating window diagnostics, ]d and [d to move between diagnostics
+    -- see also: gq for formatting
+
+    -- These are custom keymaps
+    -- bufmap('n', 'gd', '<cmd>lua vim.lsp.buf.definition()<cr>')
+    bufmap('n', 'grt', '<cmd>lua vim.lsp.buf.type_definition()<cr>')
+    bufmap('n', 'grd', '<cmd>lua vim.lsp.buf.declaration()<cr>')
+    -- bufmap({'n', 'x'}, 'gq', '<cmd>lua vim.lsp.buf.format({async = true})<cr>')
+  end,
+})
 
 -- [[ formatter ]]
 -- configure Format, FormatWrite, FormatLock, and FormatWriteLock commands
@@ -199,3 +242,4 @@ vim.api.nvim_create_autocmd({ 'BufWritePost' }, {
 -- git commands (requires vim-fugitive)
 -- vim.keymap.set("n", "<leader>gs", vim.cmd.Git('status'))
 -- vim.keymap.set("n", "<leader>gs", vim.cmd("Git status"))
+--
