@@ -16,8 +16,8 @@ vim.keymap.set('n', '<C-Up>', ':resize +2<CR>')
 vim.keymap.set('n', '<C-Down>', ':resize -2<CR>')
 vim.keymap.set('n', '<C-Left>', ':vertical resize -2<CR>')
 vim.keymap.set('n', '<C-Right>', ':vertical resize +2<CR>')
--- use esc to exit terminal mode
--- see :help terminal-emulator
+-- terminal emulator (see :h terminal-emulator)
+vim.keymap.set('n', '<leader>t', ':terminal<CR>')
 vim.keymap.set('t', '<Esc>', '<C-\\><C-n>')
 -- center screen after jumping up / down
 vim.keymap.set('n', '<C-d>', '<C-d>zz')
@@ -114,7 +114,6 @@ setup_paq {
   { 'mason-org/mason.nvim' },
   { 'neovim/nvim-lspconfig' },
   { 'stevearc/conform.nvim' },
-  { 'mfussenegger/nvim-lint' },
   { 'rose-pine/neovim', as = 'rose-pine' },
   { 'nvim-lua/plenary.nvim' },
   { 'nvim-telescope/telescope.nvim', branch = '0.1.x' },
@@ -237,18 +236,17 @@ require("conform").setup({
   },
 })
 
--- [[ linter ]]
-require('lint').linters_by_ft = {
-  lua = { 'luacheck' },
-}
-vim.api.nvim_create_autocmd({ 'BufWritePost' }, {
-  callback = function()
-    require('lint').try_lint()
-  end,
-})
+vim.api.nvim_create_user_command("Format", function(args)
+  local range = nil
+  if args.count ~= -1 then
+    local end_line = vim.api.nvim_buf_get_lines(0, args.line2 - 1, args.line2, true)[1]
+    range = {
+      start = { args.line1, 0 },
+      ["end"] = { args.line2, end_line:len() },
+    }
+  end
+  require("conform").format({ async = true, range = range })
+end, { range = true })
 
--- [[ misc ]]
--- git commands (requires vim-fugitive)
--- vim.keymap.set("n", "<leader>gs", vim.cmd.Git('status'))
--- vim.keymap.set("n", "<leader>gs", vim.cmd("Git status"))
---
+vim.keymap.set('', '<leader>f', ':Format<CR>')
+
