@@ -7,7 +7,7 @@
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 -- file explorer
-vim.keymap.set('n', '<leader>o', vim.cmd.Ex)
+vim.keymap.set('n', '<leader>po', vim.cmd.Ex)
 -- move around buffers
 vim.keymap.set('n', '<S-l>', ':bnext<CR>')
 vim.keymap.set('n', '<S-h>', ':bprevious<CR>')
@@ -27,6 +27,8 @@ vim.keymap.set('n', 'N', 'Nzzzv')
 -- shortcut to search open files
 vim.keymap.set('', '<Space>', '<Nop>')
 vim.keymap.set('n', '<leader><space>', '<cmd>buffers<cr>:buffer ', { desc = 'Search open files' })
+-- paste without clobbering register with deleted text
+vim.keymap.set('x', '<leader>p', '\"_dP')
 
 -- diagnostics are not exclusive to lsp servers
 -- so these can be global keybindings
@@ -66,7 +68,7 @@ vim.opt.softtabstop = 2
 vim.opt.shiftwidth = 2
 vim.opt.expandtab = true
 -- only show status bar if two windows are open
-vim.opt.laststatus = 1
+vim.opt.laststatus = 2
 -- split options
 vim.opt.splitright = true
 vim.opt.splitbelow = true
@@ -114,6 +116,7 @@ setup_paq {
   { 'mason-org/mason.nvim' },
   { 'neovim/nvim-lspconfig' },
   { 'rose-pine/neovim', as = 'rose-pine' },
+  { 'morhetz/gruvbox' },
   { 'nvim-lua/plenary.nvim' },
   { 'nvim-telescope/telescope.nvim', branch = 'master' },
 }
@@ -126,6 +129,7 @@ function ColorMyPencils(color)
   vim.api.nvim_set_hl(0, 'NormalFloat', { bg = 'none' })
 end
 ColorMyPencils()
+-- vim.cmd.colorscheme('gruvbox')
 
 --  [[ treesitter ]]
 local treesitter_parsers = {
