@@ -7,7 +7,7 @@
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 -- file explorer
-vim.keymap.set('n', '<leader>pp', vim.cmd.Ex)
+vim.keymap.set('n', '<leader>o', vim.cmd.Ex)
 -- move around buffers
 vim.keymap.set('n', '<S-l>', ':bnext<CR>')
 vim.keymap.set('n', '<S-h>', ':bprevious<CR>')
@@ -44,7 +44,7 @@ end
 vim.diagnostic.config {
   virtual_text = false, -- instead use <C-w>d or gl to view diagnostic message under cursor
   signs = false, -- remove warning signs from sign column
---  jump = { float = true } -- show float when jumping to diagnostics
+  jump = { float = true } -- show float when jumping to diagnostics
 }
 
 -- disable diagnostics by default
@@ -110,19 +110,17 @@ end
 -- [[ package imports ]] --
 setup_paq {
   { 'savq/paq-nvim' },
-  { 'nvim-treesitter/nvim-treesitter', build = ':TSUpdate' },
+  { 'nvim-treesitter/nvim-treesitter', build = ':TSUpdate' , branch = 'main' },
   { 'mason-org/mason.nvim' },
   { 'neovim/nvim-lspconfig' },
-  { 'stevearc/conform.nvim' },
   { 'rose-pine/neovim', as = 'rose-pine' },
   { 'nvim-lua/plenary.nvim' },
-  { 'nvim-telescope/telescope.nvim', branch = '0.1.x' },
+  { 'nvim-telescope/telescope.nvim', branch = 'master' },
 }
 
 -- [[ colorscheme ]]
 function ColorMyPencils(color)
   color = color or 'rose-pine'
-  -- or vim.cmd("colorscheme rose-pine")
   vim.cmd.colorscheme(color)
   vim.api.nvim_set_hl(0, 'Normal', { bg = 'none' })
   vim.api.nvim_set_hl(0, 'NormalFloat', { bg = 'none' })
@@ -130,12 +128,40 @@ end
 ColorMyPencils()
 
 --  [[ treesitter ]]
-require('nvim-treesitter.configs').setup {
-  ensure_installed = { 'c', 'lua', 'vim', 'vimdoc', 'query', 'markdown', 'markdown_inline' },
+local treesitter_parsers = {
+  'c', 'lua', 'vim', 'vimdoc', 'query',
+  'markdown', 'markdown_inline', 'go', 'javascript'
 }
+require('nvim-treesitter').install(treesitter_parsers)
+
+local parsersInstalled = require("nvim-treesitter").get_installed('parsers')
+for _, parser in pairs(parsersInstalled) do
+  local filetypes = vim.treesitter.language.get_filetypes(parser)
+  vim.api.nvim_create_autocmd('FileType', {
+    pattern = filetypes,
+    callback = function() vim.treesitter.start() end,
+  })
+end
 
 -- [[ telescope ]]
-local builtin = require 'telescope.builtin'
+local actions_layout = require('telescope.actions.layout')
+require('telescope').setup({
+  defaults = {
+    mappings = {
+      n = {
+        ['<C-o>'] = actions_layout.toggle_preview
+      },
+      i = {
+        ['<C-o>'] = actions_layout.toggle_preview
+      }
+    },
+    preview = {
+      hide_on_startup = true
+    }
+  },
+})
+
+local builtin = require('telescope.builtin')
 vim.keymap.set('n', '<leader>pf', builtin.find_files, {})
 vim.keymap.set('n', '<leader>pg', builtin.live_grep, {})
 vim.keymap.set('n', '<leader>pb', builtin.buffers, {})
@@ -200,53 +226,7 @@ vim.api.nvim_create_autocmd('LspAttach', {
 })
 
 -- [[ formatter ]]
--- configure Format, FormatWrite, FormatLock, and FormatWriteLock commands
--- require('formatter').setup {
---   logging = true,
---   log_level = vim.log.levels.WARN,
---   -- All formatter configurations are opt-in
---   filetype = {
---     -- formatters are executed in order within their own tables
---     css = {
---       require 'formatter.defaults.prettier',
---     },
---     html = {
---       require 'formatter.defaults.prettier',
---     },
---     lua = {
---       require('formatter.filetypes.lua').stylua,
---     },
---     -- any filetype
---     ['*'] = {
---       require('formatter.filetypes.any').remove_trailing_whitespace,
---       -- Remove trailing whitespace without 'sed'
---       -- require("formatter.filetypes.any").substitute_trailing_whitespace,
---     },
---   },
--- }
-require("conform").setup({
-  formatters_by_ft = {
-    lua = { "stylua" },
-    -- Conform will run multiple formatters sequentially
-    python = { "isort", "black" },
-    -- You can customize some of the format options for the filetype (:help conform.format)
-    rust = { "rustfmt", lsp_format = "fallback" },
-    -- Conform will run the first available formatter
-    javascript = { "prettierd", "prettier", stop_after_first = true },
-  },
-})
-
-vim.api.nvim_create_user_command("Format", function(args)
-  local range = nil
-  if args.count ~= -1 then
-    local end_line = vim.api.nvim_buf_get_lines(0, args.line2 - 1, args.line2, true)[1]
-    range = {
-      start = { args.line1, 0 },
-      ["end"] = { args.line2, end_line:len() },
-    }
-  end
-  require("conform").format({ async = true, range = range })
-end, { range = true })
-
-vim.keymap.set('', '<leader>f', ':Format<CR>')
+-- consider...
+-- https://github.com/mhartington/formatter.nvim
+-- https://github.com/stevearc/conform.nvim/
 
