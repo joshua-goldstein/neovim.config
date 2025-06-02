@@ -116,20 +116,14 @@ setup_paq {
   { 'mason-org/mason.nvim' },
   { 'neovim/nvim-lspconfig' },
   { 'rose-pine/neovim', as = 'rose-pine' },
-  { 'morhetz/gruvbox' },
   { 'nvim-lua/plenary.nvim' },
   { 'nvim-telescope/telescope.nvim', branch = 'master' },
 }
 
 -- [[ colorscheme ]]
-function ColorMyPencils(color)
-  color = color or 'rose-pine'
-  vim.cmd.colorscheme(color)
-  vim.api.nvim_set_hl(0, 'Normal', { bg = 'none' })
-  vim.api.nvim_set_hl(0, 'NormalFloat', { bg = 'none' })
-end
-ColorMyPencils()
--- vim.cmd.colorscheme('gruvbox')
+vim.cmd.colorscheme('rose-pine')
+vim.api.nvim_set_hl(0, 'Normal', { bg = 'none' })
+vim.api.nvim_set_hl(0, 'NormalFloat', { bg = 'none' })
 
 --  [[ treesitter ]]
 local treesitter_parsers = {
