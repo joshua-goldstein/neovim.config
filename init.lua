@@ -114,13 +114,19 @@ setup_paq {
   { 'savq/paq-nvim' },
   { 'nvim-treesitter/nvim-treesitter', build = ':TSUpdate' , branch = 'main' },
   { 'mason-org/mason.nvim' },
-  { 'neovim/nvim-lspconfig' },
   { 'rose-pine/neovim', as = 'rose-pine' },
   { 'nvim-lua/plenary.nvim' },
   { 'nvim-telescope/telescope.nvim', branch = 'master' },
 }
 
 -- [[ colorscheme ]]
+require('rose-pine').setup({
+  styles = {
+    bold = false,
+    italic = false,
+    transparency = true,
+  }
+})
 vim.cmd.colorscheme('rose-pine')
 vim.api.nvim_set_hl(0, 'Normal', { bg = 'none' })
 vim.api.nvim_set_hl(0, 'NormalFloat', { bg = 'none' })
@@ -172,27 +178,7 @@ end)
 -- see :h lsp and :h lsp-defaults and :h lsp-config
 -- see :h lspconfig and :h lspconfig-all for info about default configurations (from nvim-lspconfig)
 require('mason').setup()
-
--- configs here will overwrite lspconfig defaults
-vim.lsp.config('hls', {
-  filetypes = { 'haskell', 'lhaskell', 'cabal' },
-  cmd = { 'haskell-language-server-wrapper-2.9.0.1', '--lsp' },
-})
-
-vim.lsp.config('lua_ls', {
-  settings = {
-    Lua = {
-      diagnostics = {
-        globals = { 'vim' }
-      }
-    }
-  }
-})
-
-vim.lsp.enable('hls')
-vim.lsp.enable('gopls')
-vim.lsp.enable('lua_ls')
-vim.lsp.enable('pylsp')
+vim.lsp.enable({ 'haskell-language-server', 'gopls', 'lua-language-server', 'python-language-server', 'deno' })
 
 -- ref: https://vonheikemen.github.io/devlog/tools/neovim-lsp-client-guide/
 vim.api.nvim_create_autocmd('LspAttach', {
@@ -222,9 +208,4 @@ vim.api.nvim_create_autocmd('LspAttach', {
     -- bufmap({'n', 'x'}, 'gq', '<cmd>lua vim.lsp.buf.format({async = true})<cr>')
   end,
 })
-
--- [[ formatter ]]
--- consider...
--- https://github.com/mhartington/formatter.nvim
--- https://github.com/stevearc/conform.nvim/
 
