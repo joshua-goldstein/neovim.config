@@ -1,28 +1,8 @@
----@brief
----
---- https://github.com/haskell/haskell-language-server
----
---- Haskell Language Server
----
---- If you are using HLS 1.9.0.0, enable the language server to launch on Cabal files as well:
----
---- ```lua
---- vim.lsp.config('hls', {
----   filetypes = { 'haskell', 'lhaskell', 'cabal' },
---- })
---- ```
-
--- local util = require 'lspconfig.util'
-
 return {
-  -- cmd = { 'haskell-language-server-wrapper', '--lsp' },
-  cmd = { 'haskell-language-server-wrapper-2.9.0.1', '--lsp' },
-  -- filetypes = { 'haskell', 'lhaskell' },
+  cmd = { 'haskell-language-server-wrapper', '--lsp' },
   filetypes = { 'haskell', 'lhaskell', 'cabal' },
-  -- root_dir = function(bufnr, on_dir)
-  --   local fname = vim.api.nvim_buf_get_name(bufnr)
-  --   on_dir(util.root_pattern('hie.yaml', 'stack.yaml', 'cabal.project', '*.cabal', 'package.yaml')(fname))
-  -- end,
+  root_dir = vim.fs.root(0, {'hie.yaml', 'hie.yml', 'stack.yaml', 'stack.yml'}),
+  -- root_markers = { { 'hie.yaml', 'stack.yaml', 'cabal.project', '*.cabal', 'package.yaml' }, '.git' },
   settings = {
     haskell = {
       formattingProvider = 'ormolu',
