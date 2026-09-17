@@ -26,34 +26,41 @@ vim.keymap.set('n', 'n', 'nzzzv')
 vim.keymap.set('n', 'N', 'Nzzzv')
 -- shortcut to search open files
 vim.keymap.set('', '<Space>', '<Nop>')
-vim.keymap.set('n', '<leader><space>', '<cmd>buffers<cr>:buffer ', { desc = 'Search open files' })
+vim.keymap.set(
+  'n', '<leader><space>', '<cmd>buffers<cr>:buffer ', { desc = 'Search open files' }
+)
 -- paste without clobbering register with deleted text
 vim.keymap.set('x', '<leader>p', '\"_dP')
 
--- diagnostics are not exclusive to lsp servers
--- so these can be global keybindings
+-- diagnostics
+-- these are global because diagnostics are not exclusive to lsp servers
 vim.keymap.set('n', 'gl', '<cmd>lua vim.diagnostic.open_float()<cr>')
-vim.keymap.set('n', '<leader>d', '<cmd>lua ToggleDiagnostics()<cr>')
 
-function ToggleDiagnostics()
+local ToggleDiagnostics = function()
   if vim.diagnostic.is_enabled() then
     vim.diagnostic.enable(false)
   else
     vim.diagnostic.enable()
   end
 end
+vim.keymap.set('n', '<leader>d', ToggleDiagnostics)
+
 
 vim.diagnostic.config {
   virtual_text = false, -- instead use <C-w>d or gl to view diagnostic message under cursor
   signs = false, -- remove warning signs from sign column
-  jump = { float = true } -- show float when jumping to diagnostics
+  -- show float when jumping to diagnostics
+  jump = {
+    on_jump = function()
+      vim.diagnostic.open_float()
+    end,
+  },
 }
 
--- disable diagnostics by default
-vim.diagnostic.enable(false)
+vim.diagnostic.enable(false) -- disable by default
 
 -- [[editor options]]
--- equivalent to :set number
+-- equivalent to :set number, etc.
 vim.opt.number = true
 vim.opt.mouse = 'a'
 vim.opt.showmode = false
@@ -81,43 +88,25 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   end,
 })
 
--- [[ package manager ]]
--- clone paq if not already present
-local clone_paq = function()
-  local path = vim.fn.stdpath 'data' .. '/site/pack/paqs/start/paq-nvim'
-  local is_installed = vim.fn.empty(vim.fn.glob(path)) == 0
-  if not is_installed then
-    vim.fn.system { 'git', 'clone', '--depth=1', 'https://github.com/savq/paq-nvim.git', path }
-    return true
+-- [[ packages ]]
+-- from https://echasnovski.com/blog/2026-03-13-a-guide-to-vim-pack
+-- this will eventually not be needed
+vim.api.nvim_create_autocmd('PackChanged', { callback = function(ev)
+  local name, kind = ev.data.spec.name, ev.data.kind
+  if name == 'nvim-treesitter' and kind == 'update' then
+    if not ev.data.active then vim.cmd.packadd('nvim-treesitter') end
+    vim.cmd('TSUpdate')
   end
-end
+end })
 
-local bootstrap_paq = function(packages)
-  vim.cmd.packadd 'paq-nvim'
-  local paq = require 'paq'
-  paq(packages)
-  paq.install()
-end
-
-local setup_paq = function(packages)
-  local first_install = clone_paq()
-  if not first_install then
-    local paq = require 'paq'
-    paq(packages)
-  else
-    bootstrap_paq(packages)
-  end
-end
-
--- [[ package imports ]] --
-setup_paq {
-  { 'savq/paq-nvim' },
-  { 'nvim-treesitter/nvim-treesitter', build = ':TSUpdate' , branch = 'main' },
-  { 'mason-org/mason.nvim' },
-  { 'rose-pine/neovim', as = 'rose-pine' },
-  { 'nvim-lua/plenary.nvim' },
-  { 'nvim-telescope/telescope.nvim', branch = 'master' },
-}
+vim.pack.add({
+  { src = "https://github.com/rose-pine/neovim", name = "rose-pine", },
+  -- requires https://formulae.brew.sh/formula/tree-sitter-cli
+  { src = "https://github.com/nvim-treesitter/nvim-treesitter", },
+  { src = "https://github.com/nvim-lua/plenary.nvim", },
+  { src = "https://github.com/nvim-telescope/telescope.nvim", },
+  -- { src = 'https://github.com/mrcjkb/haskell-tools.nvim', version = vim.version.range('^10') },
+})
 
 -- [[ colorscheme ]]
 require('rose-pine').setup({
@@ -131,19 +120,27 @@ vim.cmd.colorscheme('rose-pine')
 vim.api.nvim_set_hl(0, 'Normal', { bg = 'none' })
 vim.api.nvim_set_hl(0, 'NormalFloat', { bg = 'none' })
 
---  [[ treesitter ]]
-local treesitter_parsers = {
+-- [[ treesitter ]]
+-- :h nvim-treesitter-commands
+-- docs https://tree-sitter.github.io/tree-sitter/
+require('nvim-treesitter').install({
   'c', 'lua', 'vim', 'vimdoc', 'query',
-  'markdown', 'markdown_inline', 'go', 'javascript'
-}
-require('nvim-treesitter').install(treesitter_parsers)
+  'markdown', 'markdown_inline', 'go', 'javascript',
+  'java', 'haskell', 'python',
+})
 
 local parsersInstalled = require("nvim-treesitter").get_installed('parsers')
 for _, parser in pairs(parsersInstalled) do
   local filetypes = vim.treesitter.language.get_filetypes(parser)
   vim.api.nvim_create_autocmd('FileType', {
     pattern = filetypes,
-    callback = function() vim.treesitter.start() end,
+    callback = function()
+      vim.treesitter.start()
+      vim.wo[0][0].foldexpr = 'v:lua.vim.treesitter.foldexpr()'
+      vim.wo[0][0].foldmethod = 'expr'
+      vim.wo.foldlevel = 99
+      vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+    end,
   })
 end
 
@@ -152,12 +149,8 @@ local actions_layout = require('telescope.actions.layout')
 require('telescope').setup({
   defaults = {
     mappings = {
-      n = {
-        ['<C-o>'] = actions_layout.toggle_preview
-      },
-      i = {
-        ['<C-o>'] = actions_layout.toggle_preview
-      }
+      n = { ['<C-o>'] = actions_layout.toggle_preview },
+      i = { ['<C-o>'] = actions_layout.toggle_preview }
     },
     preview = {
       hide_on_startup = true
@@ -175,10 +168,14 @@ vim.keymap.set('n', '<leader>ps', function()
 end)
 
 -- [[ lsp ]]
--- see :h lsp and :h lsp-defaults and :h lsp-config
--- see :h lspconfig and :h lspconfig-all for info about default configurations (from nvim-lspconfig)
-require('mason').setup()
-vim.lsp.enable({ 'haskell-language-server', 'gopls', 'lua-language-server', 'python-language-server', 'deno' })
+-- lsp configs live in ~/.config/lsp and must be enabled individually
+-- default configurations found at:
+-- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md
+-- see :h lsp, lsp-defaults, and lsp-config, diagnostic-defaults
+vim.lsp.enable({
+  "haskell-language-server",
+  "lua-language-server",
+})
 
 -- ref: https://vonheikemen.github.io/devlog/tools/neovim-lsp-client-guide/
 vim.api.nvim_create_autocmd('LspAttach', {
@@ -209,3 +206,5 @@ vim.api.nvim_create_autocmd('LspAttach', {
   end,
 })
 
+-- https://github.com/mfussenegger/nvim-dap
+-- https://codeberg.org/mfussenegger/nvim-dap/wiki/Debug-Adapter-installation
