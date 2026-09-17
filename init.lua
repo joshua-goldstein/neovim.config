@@ -106,6 +106,9 @@ vim.pack.add({
   { src = "https://github.com/nvim-lua/plenary.nvim", },
   { src = "https://github.com/nvim-telescope/telescope.nvim", },
   -- { src = 'https://github.com/mrcjkb/haskell-tools.nvim', version = vim.version.range('^10') },
+  { src = "https://github.com/tpope/vim-fugitive" },
+  { src = "https://github.com/tpope/vim-surround.git" },
+  { src = "https://github.com/tpope/vim-repeat.git" },
 })
 
 -- [[ colorscheme ]]
